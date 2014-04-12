@@ -4,6 +4,8 @@ import (
 	"bytes"
     "crypto/rand"
 	"encoding/binary"
+	"encoding/hex"
+    "fmt"
     "time"
 )
 
@@ -13,16 +15,26 @@ var ContentTypeHandshake = []byte{22}
 var ContentTypeApplicationData = []byte{23}
 var HandshakeDTLSVersion = []byte{0xfe, 0xff}
 
+const (
+    DTLSv10 = 0xfeff
+    DTLSv12 = 0xfefd
+)
+
 var ClientHelloHandshakePart1 = []byte{
     0x01,             // Handshake Type: Client Hello (1)
-    0x00, 0x00, 0x6f, // Length: 111
-    0x00, 0x00,       // Message Sequence: 0
-    0x00, 0x00, 0x00, // Fragment Offset: 0
-    0x00, 0x00, 0x6f, // Fragment Length: 111
-    0xfe, 0xff,       // Version: DTLS 1.0 (0xfeff)
-} 
+    // Length [3 bytes]
+}
 
 var ClientHelloHandshakePart2 = []byte{
+    // Message Sequence [2 bytes]
+    0x00, 0x00, 0x00, // Fragment Offset: 0
+    // Fragment Length [3 bytes]
+}
+
+var ClientHelloHandshakePart3 = []byte{
+    // version [2 bytes]
+    // epoch [4 bytes]
+    // random [28 bytes]
     0x00,                         // Session ID Length: 0
     0x00,                         // Cookie Length: 0
     0x00, 0x40,                   // Cipher Suites Length: 64
@@ -34,103 +46,125 @@ var ClientHelloHandshakePart2 = []byte{
     0x00, 0x07, 0x00, 0xff,       // Cipher Suites (32 suites)
     0x01,                         // Compression Methods Length: 1
     0x00,                         // Compression Methods (1 method)
-    0x00, 0x05,                   // Extensions Length: 9
+    // Extensions Length [2 bytes]
+    // Extensions [variable length]
+}
+
+var ClientHelloHandshakeHeartbeatExt = []byte{
     0x00, 0x0f, 0x00, 0x01, 0x01, // Extension: Heartbeat
+}
+
+func BuildClientHello(msgseq uint16, version int, extensions [][]byte) (packet, random []byte) {
+	buf := bytes.Buffer{}
+    var intermediate []byte
+    var extlen uint16 = 0
+
+    // build extension (last part of the packet)
+    for i := range(extensions) {
+        buf.Write(extensions[i])
+        extlen += uint16(len(extensions[i]))
+    }
+    intermediate = buf.Bytes()
+    fmt.Println(hex.Dump(intermediate))
+    buf.Reset()
+
+    // add extension length and extensions
+    buf.Write(Uint16To2Bytes(extlen))
+    buf.Write(intermediate)
+    intermediate = buf.Bytes()
+    fmt.Println(hex.Dump(intermediate))
+    buf.Reset()
+
+    // add version
+    buf.Write(Uint16To2Bytes(uint16(version)))
+
+    // generate and add timestamp
+    epoch := uint32(time.Now().Unix())
+    epochbuf := make([]byte, 4)
+    binary.BigEndian.PutUint32(epochbuf, epoch)
+    buf.Write(epochbuf)
+
+    // generate and add random bytes
+    randbuf := make([]byte, 28)
+    rand.Read(randbuf)
+    buf.Write(randbuf)
+
+    // add last handshake part
+    buf.Write(ClientHelloHandshakePart3)
+    buf.Write(intermediate)
+    intermediate = buf.Bytes()
+    fmt.Println(hex.Dump(intermediate))
+    FragmentLength := uint32(len(intermediate))
+    buf.Reset()
+
+    // add message sequence, fragment offset and fragment length
+    buf.Write(Uint16To2Bytes(uint16(msgseq)))
+    buf.Write(ClientHelloHandshakePart2)
+    buf.Write(Uint32To3Bytes(FragmentLength))
+    buf.Write(intermediate)
+    intermediate = buf.Bytes()
+    fmt.Println(hex.Dump(intermediate))
+    Length := uint32(len(intermediate))
+    buf.Reset()
+
+    // add handshake type and length
+    buf.Write(ClientHelloHandshakePart1)
+    buf.Write(Uint32To3Bytes(Length))
+    buf.Write(intermediate)
+
+    return buf.Bytes(), randbuf
+}
+
+func Uint32To3Bytes(in uint32) []byte {
+    if in > 255*255*255 {
+        panic(fmt.Errorf("Unable to convert uint32 %d to a [3]byte", in))
+    }
+    buf := make([]byte, 4)
+    binary.BigEndian.PutUint32(buf, in)
+    return buf[1:4]
+}
+
+func Uint16To2Bytes(in uint16) []byte {
+    buf := make([]byte, 2)
+    binary.BigEndian.PutUint16(buf, in)
+    return buf
 }
 
 func BuildDTLSRecord(ContentType, ProtocolVersion []byte, epoch uint16, seqnum uint64, fragment []byte) []byte {
 	buf := bytes.Buffer{}
 
     // add ContentType
-	_, err := buf.Write(ContentType)
-	if err != nil {
-		panic(err)
-	}
+	buf.Write(ContentType)
 
     // add ProtocolVersion
-	_, err = buf.Write(ProtocolVersion)
-	if err != nil {
-		panic(err)
-	}
+	buf.Write(ProtocolVersion)
 
     // add epoch
     epochbuf := make([]byte, 2)
     binary.BigEndian.PutUint16(epochbuf, epoch)
 
-    _, err = buf.Write(epochbuf)
-	if err != nil {
-		panic(err)
-	}
+    buf.Write(epochbuf)
 
     // add sequence number
     sequencebuf := make([]byte, 8)
     binary.BigEndian.PutUint64(sequencebuf, seqnum)
 
-    _, err = buf.Write(sequencebuf[2:8])
-	if err != nil {
-		panic(err)
-	}
+    buf.Write(sequencebuf[2:8])
 
     // calculate length of fragment and add length
     length64 := len(fragment)
-    if length64 > 2^16-1 {
+    if length64 > 255*255-1 {
         panic("Fragment is too large.")
     }
     length16 := uint16(length64)
     lenbuf := make([]byte, 2)
     binary.BigEndian.PutUint16(lenbuf, length16)
 	
-    _, err = buf.Write(lenbuf)
-	if err != nil {
-		panic(err)
-	}
+    buf.Write(lenbuf)
 
     // add fragment
-	_, err = buf.Write(fragment)
-	if err != nil {
-		panic(err)
-	}
+	buf.Write(fragment)
 
 	return buf.Bytes()
-}
-
-func BuildClientHello() (packet, random []byte) {
-	buf := bytes.Buffer{}
-
-    // add first constand part of handshake
-    _, err := buf.Write(ClientHelloHandshakePart1)
-	if err != nil {
-		panic(err)
-	}
-
-    // add timestamp
-    epoch := uint32(time.Now().Unix())
-    epochbuf := make([]byte, 4)
-    binary.BigEndian.PutUint32(epochbuf, epoch)
-    
-    _, err = buf.Write(epochbuf)
-	if err != nil {
-		panic(err)
-	}
-
-    // add random bytes
-    randbuf := make([]byte, 28)
-    _, err = rand.Read(randbuf)
-	if err != nil {
-		panic(err)
-	}
-
-    _, err = buf.Write(randbuf)
-	if err != nil {
-		panic(err)
-	}
-
-    // add second constand part of handshake
-    _, err = buf.Write(ClientHelloHandshakePart2)
-	if err != nil {
-		panic(err)
-	}
-
-    return buf.Bytes(), randbuf
 }
 

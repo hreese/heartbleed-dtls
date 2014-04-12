@@ -31,8 +31,29 @@ func TestSomeDTLSRecord(t *testing.T) {
 }
 
 func TestClientHello(t *testing.T) {
-    buf, _ := BuildClientHello()
+    buf, _ := BuildClientHello(0, DTLSv10, [][]byte{ClientHelloHandshakeHeartbeatExt})
     //hexdump := hex.EncodeToString(buf)
     hexdump := hex.Dump(buf)
     fmt.Println(hexdump)
+}
+
+type U16BytesTest struct {
+    number uint32
+    result []byte
+}
+
+func TestUint32To3Bytes(t *testing.T) {
+    tests := []U16BytesTest {
+        {0x00000000, []byte{ 0x00, 0x00, 0x00, }},
+        {0x00000001, []byte{ 0x00, 0x00, 0x01, }},
+        {0x0000000f, []byte{ 0x00, 0x00, 0x0f, }},
+        //{0x00ffffff, []byte{ 0xff, 0xff, 0xff, }},
+    }
+    for i := range(tests) {
+        result := Uint32To3Bytes(tests[i].number)
+        if bytes.Compare(result, tests[i].result) != 0 {
+            t.Errorf("Error converting %#v to bytearray; got %#v; expected %#v\n",
+            tests[i].number, result, tests[i].result)
+        }
+    }
 }
