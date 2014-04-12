@@ -3,8 +3,8 @@ package heartbleed_dtls
 import (
 	"bytes"
 	_ "encoding/binary"
-	_ "encoding/hex"
-	_ "fmt"
+	"encoding/hex"
+	"fmt"
     "testing"
 )
 
@@ -28,4 +28,11 @@ func TestSomeDTLSRecord(t *testing.T) {
     if bytes.Compare(r1, refrec) != 0 {
         t.Error("r1 does not look like the reference")
     }
+}
+
+func TestClientHello(t *testing.T) {
+    buf, _ := BuildClientHello()
+    //hexdump := hex.EncodeToString(buf)
+    hexdump := hex.Dump(buf)
+    fmt.Println(hexdump)
 }
