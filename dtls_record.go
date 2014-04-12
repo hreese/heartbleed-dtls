@@ -1,13 +1,8 @@
-//package heartbleed_dtls
-package main
+package heartbleed_dtls
 
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
-	"encoding/hex"
-	//    _ "errors"
-	//    _ "strings"
 )
 
 var ContentTypeChangeCypherSpec = []byte{20}
@@ -70,11 +65,6 @@ func BuildDTLSRecord(ContentType, ProtocolVersion []byte, epoch uint16, seqnum u
 	}
 
 	return buf.Bytes()
-}
-
-func main() {
-	fmt.Println(hex.Dump(BuildDTLSRecord(ContentTypeHandshake,
-		HandshakeDTLSVersion, 0, 0xfedcba0987654321, nil)))
 }
 
 // struct {
