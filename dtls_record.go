@@ -95,7 +95,7 @@ func BuildClientHello(msgseq uint16, version int, extensions [][]byte) (packet, 
     // fix lengths/offsets
     Packet := buf.Bytes()
     PacketLength := len(Packet)
-    Length := Uint32To3Bytes(uint32(PacketLength-4))
+    Length := Uint32To3Bytes(uint32(PacketLength-4)-8)
     FragmentLength := Uint32To3Bytes(uint32(PacketLength-12))
     //fmt.Printf("%#v\n", Length)
     //fmt.Printf("%#v\n", FragmentLength)
