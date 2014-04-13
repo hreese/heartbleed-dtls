@@ -5,6 +5,7 @@ import (
 	_ "encoding/binary"
 	"encoding/hex"
 	"fmt"
+    "net"
     "testing"
 )
 
@@ -14,7 +15,7 @@ type U16BytesTest struct {
 }
 
 func TestEmptyDTLSRecord(t *testing.T) {
-	emptyRecord := BuildDTLSRecord(ContentTypeHandshake, HandshakeDTLSVersion, 0, 0, nil)
+	emptyRecord := BuildDTLSRecord(ContentTypeHandshake, DTLSv10, 0, 0, nil)
     //hexdump := hex.EncodeToString(emptyRecord)
     //fmt.Println(hexdump)
     length := len(emptyRecord)
@@ -24,7 +25,7 @@ func TestEmptyDTLSRecord(t *testing.T) {
 }
 
 func TestSomeDTLSRecord(t *testing.T) {
-    r1 := BuildDTLSRecord(ContentTypeHandshake, HandshakeDTLSVersion, 23,
+    r1 := BuildDTLSRecord(ContentTypeHandshake, DTLSv10, 23,
     0xfedcba0987654321, []byte("Hello World!"))
     //fmt.Println(hex.EncodeToString(r1))
     refrec := []byte{ 0x16, 0xfe, 0xff, 0x00, 0x17, 0xba, 0x09, 0x87, 0x65,
@@ -35,9 +36,20 @@ func TestSomeDTLSRecord(t *testing.T) {
     }
 }
 
-func TestClientHello(t *testing.T) {
+//func TestClientHello(t *testing.T) {
+//    buf, _ := BuildClientHello(0, DTLSv10, [][]byte{ClientHelloHandshakeHeartbeatExt})
+//    fmt.Println(hex.Dump(buf))
+//}
+
+func TestClientAgainstServer(t *testing.T) {
     buf, _ := BuildClientHello(0, DTLSv10, [][]byte{ClientHelloHandshakeHeartbeatExt})
-    fmt.Println(hex.Dump(buf))
+    pbuf   := BuildDTLSRecord(ContentTypeHandshake, DTLSv10, 0, 0, buf)
+
+    conn, err := net.Dial("udp", "localhost:4433"); if err != nil {
+        t.Error(err)
+    }
+    fmt.Println(hex.Dump(pbuf))
+    conn.Write(pbuf)
 }
 
 func TestUint32To3Bytes(t *testing.T) {

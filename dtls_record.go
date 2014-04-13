@@ -13,7 +13,6 @@ var ContentTypeChangeCypherSpec = []byte{20}
 var ContentTypeAlter = []byte{21}
 var ContentTypeHandshake = []byte{22}
 var ContentTypeApplicationData = []byte{23}
-var HandshakeDTLSVersion = []byte{0xfe, 0xff}
 
 const (
     DTLSv10 = 0xfeff
@@ -93,7 +92,7 @@ func BuildClientHello(msgseq uint16, version int, extensions [][]byte) (packet, 
     buf.Write(Uint16To2Bytes(extlen))
     buf.Write(extbuf.Bytes())
 
-    // TODO: fix lengths
+    // fix lengths/offsets
     Packet := buf.Bytes()
     PacketLength := len(Packet)
     Length := Uint32To3Bytes(uint32(PacketLength-4))
@@ -124,14 +123,14 @@ func Uint16To2Bytes(in uint16) []byte {
     return buf
 }
 
-func BuildDTLSRecord(ContentType, ProtocolVersion []byte, epoch uint16, seqnum uint64, fragment []byte) []byte {
+func BuildDTLSRecord(ContentType []byte, ProtocolVersion int, epoch uint16, seqnum uint64, fragment []byte) []byte {
 	buf := bytes.Buffer{}
 
     // add ContentType
 	buf.Write(ContentType)
 
     // add ProtocolVersion
-	buf.Write(ProtocolVersion)
+    buf.Write(Uint16To2Bytes(uint16(ProtocolVersion)))
 
     // add epoch
     epochbuf := make([]byte, 2)
@@ -147,7 +146,7 @@ func BuildDTLSRecord(ContentType, ProtocolVersion []byte, epoch uint16, seqnum u
 
     // calculate length of fragment and add length
     length64 := len(fragment)
-    if length64 > 255*255-1 {
+    if length64 > 256*256 {
         panic("Fragment is too large.")
     }
     length16 := uint16(length64)
