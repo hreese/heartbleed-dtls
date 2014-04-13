@@ -48,8 +48,12 @@ func TestClientAgainstServer(t *testing.T) {
     conn, err := net.Dial("udp", "localhost:4433"); if err != nil {
         t.Error(err)
     }
+    defer conn.Close()
+    
     fmt.Println(hex.Dump(pbuf))
     conn.Write(pbuf)
+    
+    // TODO: read and process answer
 }
 
 func TestUint32To3Bytes(t *testing.T) {
