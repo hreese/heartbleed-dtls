@@ -9,25 +9,44 @@ import (
     "time"
 )
 
-var ContentTypeChangeCypherSpec = []byte{20}
-var ContentTypeAlter = []byte{21}
-var ContentTypeHandshake = []byte{22}
-var ContentTypeApplicationData = []byte{23}
-
+// DTLS record types
 const (
-    DTLSv10 = 0xfeff
-    DTLSv12 = 0xfefd
+    RecordTypeChangeCypherSpec uint8      = 20
+    RecordTypeAlert uint8                 = 21
+    RecordTypeHandshake uint8             = 22
+    RecordTypeApplicationData uint8       = 23
+    VersionDTLS10 uint16                  = 0xfeff
+    VersionDTLS12 uint16                  = 0xfefd
+    HandshakeTypeHelloRequest uint8       = 0
+    HandshakeTypeClientHello uint8        = 1
+    HandshakeTypeServerHello uint8        = 2
+    HandshakeTypeHelloVerifyRequest uint8 = 3
+    HandshakeTypeCertificate uint8        = 11
+    HandshakeTypeServerKeyExchange uint8  = 12
+    HandshakeTypeCertificateRequest uint8 = 13
+    HandshakeTypeServerHelloDone uint8    = 14
+    HandshakeTypeCertificateVerify uint8  = 15
+    HandshakeTypeClientKeyExchange uint8  = 16
+    HandshakeTypeFinished uint8           = 20
 )
 
-var ClientHelloHandshakePart1 = []byte{
-    0x01,             // Handshake Type: Client Hello (1)
-    0x00, 0x00, 0x00, // Length [3 bytes] <- correct this
+type dtlsHandshake struct {
+    handshakeType uint8
+    messageSequence uint16
+    fragmentOffset uint32
+    fragmentLength uint32
+    handshakeData []byte
 }
 
-var ClientHelloHandshakePart2 = []byte{
-    // Message Sequence [2 bytes]
-    0x00, 0x00, 0x00, // Fragment Offset: 0
-    0x00, 0x00, 0x00, // Fragment Length [3 bytes] <- correct this
+type dtlsClientHelloMsg struct {
+    version uint16
+    epoch uint32
+    random []byte
+    sessionId []byte
+    cookie []byte
+    cipherSuites []uint16
+    compressionMethods []uint8
+    
 }
 
 var ClientHelloHandshakePart3 = []byte{
