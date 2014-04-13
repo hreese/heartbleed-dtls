@@ -8,6 +8,11 @@ import (
     "testing"
 )
 
+type U16BytesTest struct {
+    number uint32
+    result []byte
+}
+
 func TestEmptyDTLSRecord(t *testing.T) {
 	emptyRecord := BuildDTLSRecord(ContentTypeHandshake, HandshakeDTLSVersion, 0, 0, nil)
     //hexdump := hex.EncodeToString(emptyRecord)
@@ -32,14 +37,7 @@ func TestSomeDTLSRecord(t *testing.T) {
 
 func TestClientHello(t *testing.T) {
     buf, _ := BuildClientHello(0, DTLSv10, [][]byte{ClientHelloHandshakeHeartbeatExt})
-    //hexdump := hex.EncodeToString(buf)
-    hexdump := hex.Dump(buf)
-    fmt.Println(hexdump)
-}
-
-type U16BytesTest struct {
-    number uint32
-    result []byte
+    fmt.Println(hex.Dump(buf))
 }
 
 func TestUint32To3Bytes(t *testing.T) {
@@ -47,7 +45,7 @@ func TestUint32To3Bytes(t *testing.T) {
         {0x00000000, []byte{ 0x00, 0x00, 0x00, }},
         {0x00000001, []byte{ 0x00, 0x00, 0x01, }},
         {0x0000000f, []byte{ 0x00, 0x00, 0x0f, }},
-        //{0x00ffffff, []byte{ 0xff, 0xff, 0xff, }},
+        {0x00ffffff, []byte{ 0xff, 0xff, 0xff, }},
     }
     for i := range(tests) {
         result := Uint32To3Bytes(tests[i].number)
