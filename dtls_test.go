@@ -4,7 +4,7 @@ import (
 	_ "encoding/binary"
 	"encoding/hex"
 	"fmt"
-	_ "net"
+	"net"
 	"testing"
 )
 
@@ -34,25 +34,26 @@ func TestHandshakeConstruction(t *testing.T) {
 }
 
 func TestClientHelloMsgConstruction(t *testing.T) {
-    h1 := dtlsClientHelloMsg{
-        nil,
-        VersionDTLS10,
-        []byte{ 0xd0, 0xdc, 0x8d, 0xd8, 0x9c, 0x6, 0xcc, 0x32, 0x8f, 0xcd, 0x28,
-        0x3b, 0xea, 0xe9, 0x3d, 0xf3, 0x4d, 0xed, 0x67, 0xbe, 0xb4, 0x5d, 0xdc,
-        0xb8, 0x45, 0xdd, 0x55, 0x1b, 0xf9, 0x9c, 0x3a, 0x80, },
-        nil,
-        nil,
-        []uint16{ 1, 2, 4, 5, 7, 9, 0x0a, },
-        []uint8{ 0 },
-        false,
-        "",
-        nil,
-        nil,
-        false,
-        nil,
-        1,
+    p1 := dtlsMinimalClientHelloMsg.marshal()
+
+    // handshake frame
+    mHandshake := new(dtlsHandshake)
+    mHandshake.handshakeType = HandshakeTypeClientHello
+    mHandshake.body = p1
+
+    // record frame
+    mRecord := new(dtlsRecord)
+    mRecord.contentType = TypeHandshake
+    mRecord.version = VersionDTLS10
+    mRecord.dtlsBody = mHandshake.marshal()
+
+    // udp connection
+    conn, err := net.Dial("udp", "localhost:4433"); if err != nil {
+        t.Error(err)
     }
-    p1 := h1.marshal()
+    defer conn.Close()
+    conn.Write(mRecord.marshal())
+
     fmt.Println(hex.Dump(p1))
 }
 
@@ -65,8 +66,8 @@ func TestClientHelloMsgConstruction(t *testing.T) {
 //    }
 //    defer conn.Close()
 //
-//    fmt.Println(hex.Dump(pbuf))
 //    conn.Write(pbuf)
+//    fmt.Println(hex.Dump(pbuf))
 //
 //    // TODO: read and process answer
 //}

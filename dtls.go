@@ -9,6 +9,36 @@ import (
 	_ "time"
 )
 
+func (m *dtlsRecord) marshal() []byte {
+	if m.raw != nil {
+		return m.raw
+	}
+
+    m.length = uint16(len(m.dtlsBody))
+
+    buf := make([]byte, 13 + m.length)
+
+    buf[0]  = m.contentType
+    buf[1]  = uint8(m.version >> 8)
+    buf[2]  = uint8(m.version)
+    buf[3]  = uint8(m.epoch >> 8)
+    buf[4]  = uint8(m.epoch)
+    buf[5]  = uint8(m.sequenceNumber >> 40)
+    buf[6]  = uint8(m.sequenceNumber >> 32)
+    buf[7]  = uint8(m.sequenceNumber >> 24)
+    buf[8]  = uint8(m.sequenceNumber >> 16)
+    buf[9]  = uint8(m.sequenceNumber >> 8)
+    buf[10] = uint8(m.sequenceNumber)
+    buf[11]  = uint8(m.length >> 8)
+    buf[12]  = uint8(m.length)
+
+	copy(buf[13:], m.dtlsBody)
+
+	m.raw = buf
+
+	return buf
+}
+
 func (m *dtlsHandshake) Equal(i interface{}) bool {
 	m1, ok := i.(dtlsHandshake)
 	if !ok {
@@ -74,23 +104,6 @@ func (m *dtlsHandshake) marshal() []byte {
 	return buf
 }
 
-type dtlsClientHelloMsg struct {
-	raw                []byte
-	version            uint16
-	random             []byte   // (32)
-	sessionId          []byte   // 1+v
-	cookie             []byte   // 1+v
-	cipherSuites       []uint16 // 2+v
-	compressionMethods []uint8  // 2+v
-	ocspStapling       bool
-	serverName         string
-	supportedCurves    []uint16
-	supportedPoints    []uint8
-	ticketSupported    bool
-	sessionTicket      []uint8
-	heartbeat          uint8
-}
-
 func (m *dtlsClientHelloMsg) marshal() []byte {
 	if m.raw != nil {
 		return m.raw
@@ -114,10 +127,6 @@ func (m *dtlsClientHelloMsg) marshal() []byte {
 	}
 	if len(m.supportedPoints) > 0 {
 		extensionsLength += 1 + len(m.supportedPoints)
-		numExtensions++
-	}
-	if m.ticketSupported {
-		extensionsLength += len(m.sessionTicket)
 		numExtensions++
 	}
     if m.heartbeat > 0 {
@@ -213,17 +222,6 @@ func (m *dtlsClientHelloMsg) marshal() []byte {
 			z[0] = byte(pointFormat)
 			z = z[1:]
 		}
-	}
-	if m.ticketSupported {
-		// http://tools.ietf.org/html/rfc5077#section-3.2
-		z[0] = byte(extensionSessionTicket >> 8)
-		z[1] = byte(extensionSessionTicket)
-		l := len(m.sessionTicket)
-		z[2] = byte(l >> 8)
-		z[3] = byte(l)
-		z = z[4:]
-		copy(z, m.sessionTicket)
-		z = z[len(m.sessionTicket):]
 	}
     if m.heartbeat > 0 {
         z[0] = byte(extensionHeartbeat >> 8)
