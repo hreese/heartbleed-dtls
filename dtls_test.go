@@ -34,27 +34,28 @@ func TestHandshakeConstruction(t *testing.T) {
 }
 
 func TestClientHelloMsgConstruction(t *testing.T) {
-    p1 := dtlsMinimalClientHelloMsg.marshal()
+	p1 := dtlsMinimalClientHelloMsg.marshal()
 
-    // handshake frame
-    mHandshake := new(dtlsHandshake)
-    mHandshake.handshakeType = HandshakeTypeClientHello
-    mHandshake.body = p1
+	// handshake frame
+	mHandshake := new(dtlsHandshake)
+	mHandshake.handshakeType = HandshakeTypeClientHello
+	mHandshake.body = p1
 
-    // record frame
-    mRecord := new(dtlsRecord)
-    mRecord.contentType = TypeHandshake
-    mRecord.version = VersionDTLS10
-    mRecord.dtlsBody = mHandshake.marshal()
+	// record frame
+	mRecord := new(dtlsRecord)
+	mRecord.contentType = TypeHandshake
+	mRecord.version = VersionDTLS10
+	mRecord.dtlsBody = mHandshake.marshal()
 
-    // udp connection
-    conn, err := net.Dial("udp", "localhost:4433"); if err != nil {
-        t.Error(err)
-    }
-    defer conn.Close()
-    conn.Write(mRecord.marshal())
+	// udp connection
+	conn, err := net.Dial("udp", "localhost:4433")
+	if err != nil {
+		t.Error(err)
+	}
+	defer conn.Close()
+	conn.Write(mRecord.marshal())
 
-    fmt.Println(hex.Dump(p1))
+	fmt.Println(hex.Dump(p1))
 }
 
 //func TestClientAgainstServer(t *testing.T) {

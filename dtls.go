@@ -14,23 +14,23 @@ func (m *dtlsRecord) marshal() []byte {
 		return m.raw
 	}
 
-    m.length = uint16(len(m.dtlsBody))
+	m.length = uint16(len(m.dtlsBody))
 
-    buf := make([]byte, 13 + m.length)
+	buf := make([]byte, 13+m.length)
 
-    buf[0]  = m.contentType
-    buf[1]  = uint8(m.version >> 8)
-    buf[2]  = uint8(m.version)
-    buf[3]  = uint8(m.epoch >> 8)
-    buf[4]  = uint8(m.epoch)
-    buf[5]  = uint8(m.sequenceNumber >> 40)
-    buf[6]  = uint8(m.sequenceNumber >> 32)
-    buf[7]  = uint8(m.sequenceNumber >> 24)
-    buf[8]  = uint8(m.sequenceNumber >> 16)
-    buf[9]  = uint8(m.sequenceNumber >> 8)
-    buf[10] = uint8(m.sequenceNumber)
-    buf[11]  = uint8(m.length >> 8)
-    buf[12]  = uint8(m.length)
+	buf[0] = m.contentType
+	buf[1] = uint8(m.version >> 8)
+	buf[2] = uint8(m.version)
+	buf[3] = uint8(m.epoch >> 8)
+	buf[4] = uint8(m.epoch)
+	buf[5] = uint8(m.sequenceNumber >> 40)
+	buf[6] = uint8(m.sequenceNumber >> 32)
+	buf[7] = uint8(m.sequenceNumber >> 24)
+	buf[8] = uint8(m.sequenceNumber >> 16)
+	buf[9] = uint8(m.sequenceNumber >> 8)
+	buf[10] = uint8(m.sequenceNumber)
+	buf[11] = uint8(m.length >> 8)
+	buf[12] = uint8(m.length)
 
 	copy(buf[13:], m.dtlsBody)
 
@@ -129,42 +129,42 @@ func (m *dtlsClientHelloMsg) marshal() []byte {
 		extensionsLength += 1 + len(m.supportedPoints)
 		numExtensions++
 	}
-    if m.heartbeat > 0 {
-        extensionsLength += 1
-        numExtensions++
-    }
+	if m.heartbeat > 0 {
+		extensionsLength += 1
+		numExtensions++
+	}
 	if numExtensions > 0 {
 		extensionsLength += 4 * numExtensions
 		length += 2 + extensionsLength
 	}
 
-    x := make([]byte, 4+length)
-    x[0] = HandshakeTypeHelloRequest
-    x[1] = uint8(length >> 16)
-    x[2] = uint8(length >> 8)
-    x[3] = uint8(length)
-    x[4] = uint8(m.version >> 8)
-    x[5] = uint8(m.version)
-    copy(x[6:38], m.random)
-    x[38] = uint8(len(m.sessionId))
-    copy(x[39:39+len(m.sessionId)], m.sessionId)
-    y := x[39+len(m.sessionId):]
-    y[0] = uint8(len(m.cipherSuites) >> 7)
-    y[1] = uint8(len(m.cipherSuites) << 1)
-    for i, suite := range m.cipherSuites {
-        y[2+i*2] = uint8(suite >> 8)
-        y[3+i*2] = uint8(suite)
-    }
-    z := y[2+len(m.cipherSuites)*2:]
-    z[0] = uint8(len(m.compressionMethods))
-    copy(z[1:], m.compressionMethods)
+	x := make([]byte, 4+length)
+	x[0] = HandshakeTypeHelloRequest
+	x[1] = uint8(length >> 16)
+	x[2] = uint8(length >> 8)
+	x[3] = uint8(length)
+	x[4] = uint8(m.version >> 8)
+	x[5] = uint8(m.version)
+	copy(x[6:38], m.random)
+	x[38] = uint8(len(m.sessionId))
+	copy(x[39:39+len(m.sessionId)], m.sessionId)
+	y := x[39+len(m.sessionId):]
+	y[0] = uint8(len(m.cipherSuites) >> 7)
+	y[1] = uint8(len(m.cipherSuites) << 1)
+	for i, suite := range m.cipherSuites {
+		y[2+i*2] = uint8(suite >> 8)
+		y[3+i*2] = uint8(suite)
+	}
+	z := y[2+len(m.cipherSuites)*2:]
+	z[0] = uint8(len(m.compressionMethods))
+	copy(z[1:], m.compressionMethods)
 
-    z = z[1+len(m.compressionMethods):]
-    if numExtensions > 0 {
-        z[0] = byte(extensionsLength >> 8)
-        z[1] = byte(extensionsLength)
-        z = z[2:]
-    }
+	z = z[1+len(m.compressionMethods):]
+	if numExtensions > 0 {
+		z[0] = byte(extensionsLength >> 8)
+		z[1] = byte(extensionsLength)
+		z = z[2:]
+	}
 
 	if len(m.serverName) > 0 {
 		z[0] = byte(extensionServerName >> 8)
@@ -223,11 +223,11 @@ func (m *dtlsClientHelloMsg) marshal() []byte {
 			z = z[1:]
 		}
 	}
-    if m.heartbeat > 0 {
-        z[0] = byte(extensionHeartbeat >> 8)
-        z[1] = byte(extensionHeartbeat)
-        z[2] = m.heartbeat
-    }
+	if m.heartbeat > 0 {
+		z[0] = byte(extensionHeartbeat >> 8)
+		z[1] = byte(extensionHeartbeat)
+		z[2] = m.heartbeat
+	}
 
 	m.raw = x
 

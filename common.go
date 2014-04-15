@@ -38,13 +38,13 @@ const (
 )
 
 type dtlsRecord struct {
-    raw             []byte
-	contentType     uint8
-	version         uint16
-	epoch           uint16
-	sequenceNumber  uint64 // uint48
-	length          uint16
-	dtlsBody        []byte
+	raw            []byte
+	contentType    uint8
+	version        uint16
+	epoch          uint16
+	sequenceNumber uint64 // uint48
+	length         uint16
+	dtlsBody       []byte
 }
 
 type dtlsHandshake struct {
@@ -74,10 +74,10 @@ type dtlsClientHelloMsg struct {
 }
 
 var dtlsMinimalRecord = dtlsRecord{
-	contentType:     TypeHandshake,
-	version:         VersionDTLS10,
-	epoch:           0,
-	sequenceNumber:  0,
+	contentType:    TypeHandshake,
+	version:        VersionDTLS10,
+	epoch:          0,
+	sequenceNumber: 0,
 }
 
 var dtlsMinimalHandshake = dtlsHandshake{
@@ -86,8 +86,8 @@ var dtlsMinimalHandshake = dtlsHandshake{
 }
 
 var dtlsMinimalClientHelloMsg = dtlsClientHelloMsg{
-	raw:                nil,
-	version:            VersionDTLS10,
+	raw:     nil,
+	version: VersionDTLS10,
 	random: []byte{0xd0, 0xdc, 0x8d, 0xd8, 0x9c, 0x6, 0xcc, 0x32, 0x8f, 0xcd,
 		0x28, 0x3b, 0xea, 0xe9, 0x3d, 0xf3, 0x4d, 0xed, 0x67, 0xbe, 0xb4,
 		0x5d, 0xdc, 0xb8, 0x45, 0xdd, 0x55, 0x1b, 0xf9, 0x9c, 0x3a, 0x80},
