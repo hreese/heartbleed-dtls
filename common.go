@@ -37,42 +37,6 @@ const (
 	extensionRenegotiation       uint16 = 0xff01
 )
 
-type dtlsRecord struct {
-	raw            []byte
-	contentType    uint8
-	version        uint16
-	epoch          uint16
-	sequenceNumber uint64 // uint48
-	length         uint16
-	dtlsBody       []byte
-}
-
-type dtlsHandshake struct {
-	raw             []byte
-	handshakeType   uint8
-	length          uint32 // uint24
-	messageSequence uint16
-	fragmentOffset  uint32
-	fragmentLength  uint32
-	body            []byte
-}
-
-type dtlsClientHelloMsg struct {
-	raw                []byte
-	version            uint16
-	random             []byte   // (32)
-	sessionId          []byte   // 1+v
-	cookie             []byte   // 1+v
-	cipherSuites       []uint16 // 2+v
-	compressionMethods []uint8  // 2+v
-	ocspStapling       bool
-	serverName         string
-	supportedCurves    []uint16
-	supportedPoints    []uint8
-	ticketSupported    bool
-	heartbeat          uint8
-}
-
 var dtlsMinimalRecord = dtlsRecord{
 	contentType:    TypeHandshake,
 	version:        VersionDTLS10,
@@ -102,3 +66,4 @@ var dtlsMinimalClientHelloMsg = dtlsClientHelloMsg{
 	ticketSupported:    false,
 	heartbeat:          0x01,
 }
+

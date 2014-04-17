@@ -6,6 +6,16 @@ import (
 	"fmt"
 )
 
+type dtlsHandshake struct {
+	raw             []byte
+	handshakeType   uint8
+	length          uint32 // uint24
+	messageSequence uint16
+	fragmentOffset  uint32
+	fragmentLength  uint32
+	body            []byte
+}
+
 func (m *dtlsHandshake) equal(i interface{}) bool {
 	m1, ok := i.(*dtlsHandshake)
 	if !ok {

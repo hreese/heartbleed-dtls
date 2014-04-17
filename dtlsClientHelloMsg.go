@@ -6,6 +6,22 @@ import (
 	"fmt"
 )
 
+type dtlsClientHelloMsg struct {
+	raw                []byte
+	version            uint16
+	random             []byte   // (32)
+	sessionId          []byte   // 1+v
+	cookie             []byte   // 1+v
+	cipherSuites       []uint16 // 2+v
+	compressionMethods []uint8  // 2+v
+	ocspStapling       bool
+	serverName         string
+	supportedCurves    []uint16
+	supportedPoints    []uint8
+	ticketSupported    bool
+	heartbeat          uint8
+}
+
 func (m *dtlsClientHelloMsg) marshal() []byte {
 	if m.raw != nil {
 		return m.raw

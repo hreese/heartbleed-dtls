@@ -4,6 +4,16 @@ import (
 	"bytes"
 )
 
+type dtlsRecord struct {
+	raw            []byte
+	contentType    uint8
+	version        uint16
+	epoch          uint16
+	sequenceNumber uint64 // uint48
+	length         uint16
+	dtlsBody       []byte
+}
+
 func (m *dtlsRecord) marshal() []byte {
 	if m.raw != nil {
 		return m.raw
