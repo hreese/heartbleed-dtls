@@ -66,4 +66,3 @@ var dtlsMinimalClientHelloMsg = dtlsClientHelloMsg{
 	ticketSupported:    false,
 	heartbeat:          0x01,
 }
-

@@ -88,4 +88,3 @@ func (m *dtlsHandshake) marshal() []byte {
 
 	return buf
 }
-
