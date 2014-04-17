@@ -4,8 +4,8 @@ import (
 	"bytes"
 	_ "crypto/rand"
 	_ "encoding/binary"
-	_ "encoding/hex"
-	_ "fmt"
+	"encoding/hex"
+	"fmt"
 	_ "time"
 )
 
@@ -32,7 +32,7 @@ func (m *dtlsRecord) marshal() []byte {
 	buf[11] = uint8(m.length >> 8)
 	buf[12] = uint8(m.length)
 
-	copy(buf[13:], m.dtlsBody)
+    copy(buf[13:], m.dtlsBody)
 
 	m.raw = buf
 
@@ -83,6 +83,8 @@ func (m *dtlsHandshake) marshal() []byte {
 
 	buf := make([]byte, 4+length)
 
+	fmt.Printf("%#v\n", m)
+	fmt.Println(hex.Dump(buf))
 	buf[0] = m.handshakeType
 	buf[1] = uint8(length >> 16)
 	buf[2] = uint8(length >> 8)
@@ -93,10 +95,16 @@ func (m *dtlsHandshake) marshal() []byte {
 	buf[7] = uint8(m.fragmentOffset >> 16)
 	buf[8] = uint8(m.fragmentOffset >> 8)
 	buf[9] = uint8(m.fragmentOffset)
+	if m.fragmentLength == 0 {
+		m.fragmentLength = uint32(len(m.body))
+		fmt.Printf("New length: %d\n", m.fragmentLength)
+	}
 	buf[10] = uint8(m.fragmentLength >> 24)
 	buf[11] = uint8(m.fragmentLength >> 16)
 	buf[12] = uint8(m.fragmentLength >> 8)
 	buf[13] = uint8(m.fragmentLength)
+	fmt.Printf("%#v\n", m)
+	fmt.Println(hex.Dump(buf))
 	copy(buf[14:], m.body)
 
 	m.raw = buf
@@ -112,6 +120,8 @@ func (m *dtlsClientHelloMsg) marshal() []byte {
 	length := 2 + 32 + 1 + len(m.sessionId) + 1 + len(m.cookie) + 2 + len(m.cipherSuites)*2 + len(m.compressionMethods)
 	numExtensions := 0
 	extensionsLength := 0
+
+	fmt.Printf("001: %#v %#v %#v\n", length, numExtensions, extensionsLength)
 
 	if m.ocspStapling {
 		extensionsLength += 1 + 2 + 2
@@ -137,6 +147,8 @@ func (m *dtlsClientHelloMsg) marshal() []byte {
 		extensionsLength += 4 * numExtensions
 		length += 2 + extensionsLength
 	}
+
+	fmt.Printf("002: %#v %#v %#v\n", length, numExtensions, extensionsLength)
 
 	x := make([]byte, 4+length)
 	x[0] = HandshakeTypeHelloRequest
