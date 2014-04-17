@@ -32,11 +32,42 @@ func (m *dtlsRecord) marshal() []byte {
 	buf[11] = uint8(m.length >> 8)
 	buf[12] = uint8(m.length)
 
-    copy(buf[13:], m.dtlsBody)
+	copy(buf[13:], m.dtlsBody)
 
 	m.raw = buf
 
 	return buf
+}
+
+func (m *dtlsRecord) unmarshal(data []byte) bool {
+	if len(data) < 13 {
+		return false
+	}
+	m.raw = data
+	m.contentType = uint8(data[0])
+	m.version = uint16(data[1])<<8 | uint16(data[2])
+	m.epoch = uint16(data[3])<<8 | uint16(data[4])
+	m.sequenceNumber = uint64(data[5])<<40 | uint64(data[6])<<32 | uint64(data[7])<<24 | uint64(data[8])<<16 | uint64(data[9])<<8 | uint64(data[10])
+	m.length = uint16(data[11])<<8 | uint16(data[12])
+
+	copy(m.dtlsBody, data[12:])
+
+	return true
+}
+
+func (m *dtlsRecord) Equal(i interface{}) bool {
+	m1, ok := i.(dtlsRecord)
+	if !ok {
+		return false
+	}
+
+	return bytes.Equal(m.raw, m1.raw) &&
+		m.contentType == m.contentType &&
+		m.version == m.version &&
+		m.epoch == m.epoch &&
+		m.sequenceNumber == m.sequenceNumber &&
+		m.length == m.length &&
+		bytes.Equal(m.dtlsBody, m1.dtlsBody)
 }
 
 func (m *dtlsHandshake) Equal(i interface{}) bool {
