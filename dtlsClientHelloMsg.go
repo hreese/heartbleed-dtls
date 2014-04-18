@@ -3,11 +3,15 @@ package heartbleed_dtls
 import (
 	"bytes"
 	"crypto/rand"
-    _ "encoding/hex"
-	_ "fmt"
+	"encoding/hex"
+	"fmt"
 	"reflect"
 	"time"
 )
+
+func dontAnnoyMeWhileDebugging() {
+	fmt.Print(hex.Dump([]byte{0x23, 0x42}))
+}
 
 // RFC 4346, Section 7.4.1.2
 func NewRandom() []byte {
@@ -67,10 +71,12 @@ func (m *dtlsClientHelloMsg) equal(i interface{}) bool {
 
 func (m *dtlsClientHelloMsg) marshal() []byte {
 	if m.raw != nil {
+		logClientHello.Print("raw not nil, returning raw.")
 		return m.raw
 	}
 
-	length := 2 + 32 + 1 + len(m.sessionId) + 1 + len(m.cookie) + 2 + len(m.cipherSuites)*2 + 1+ len(m.compressionMethods)
+	length := 2 + 32 + 1 + len(m.sessionId) + 1 + len(m.cookie) + 2 + len(m.cipherSuites)*2 + 1 + len(m.compressionMethods)
+	logClientHello.Printf("length is %d (0x%x)\n", length, length)
 	numExtensions := 0
 	extensionsLength := 0
 
@@ -97,6 +103,7 @@ func (m *dtlsClientHelloMsg) marshal() []byte {
 	if numExtensions > 0 {
 		extensionsLength += 4 * numExtensions
 		length += 2 + extensionsLength
+		logClientHello.Printf("%d extension(s) present, enlarging packet by %d (0x%x) bytes\n", numExtensions, 2+extensionsLength, 2+extensionsLength)
 	}
 
 	x := make([]byte, 4+length)
@@ -107,14 +114,16 @@ func (m *dtlsClientHelloMsg) marshal() []byte {
 	x[4] = uint8(m.version >> 8)
 	x[5] = uint8(m.version)
 	copy(x[6:38], m.random)
+	logClientHello.Printf("Adding session %v; length %d\n", m.sessionId, len(m.sessionId))
 	x[38] = uint8(len(m.sessionId))
 	copy(x[39:39+len(m.sessionId)], m.sessionId)
 
-    xx := x[39+len(m.sessionId):]
-    xx[0] = uint8(len(m.cookie))
-    copy(xx[1:], m.cookie)
+	logClientHello.Printf("Adding cookie %v; length %d\n", m.cookie, len(m.cookie))
+	xx := x[39+len(m.cookie):]
+	xx[0] = uint8(len(m.cookie))
+	copy(xx[1:1+len(m.cookie)], m.cookie)
 
-    y := xx[1+len(m.cookie):]
+	y := xx[1+len(m.cookie):]
 	y[0] = uint8(len(m.cipherSuites) >> 7)
 	y[1] = uint8(len(m.cipherSuites) << 1)
 	for i, suite := range m.cipherSuites {
@@ -190,10 +199,10 @@ func (m *dtlsClientHelloMsg) marshal() []byte {
 		}
 	}
 	if m.heartbeat > 0 {
-        z[0] = 0x00
-        z[1] = 0x0f
-        z[2] = 0x00
-        z[3] = 0x01
+		z[0] = 0x00
+		z[1] = 0x0f
+		z[2] = 0x00
+		z[3] = 0x01
 		z[4] = m.heartbeat
 	}
 
