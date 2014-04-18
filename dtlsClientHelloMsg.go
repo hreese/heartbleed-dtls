@@ -24,7 +24,7 @@ func NewRandom() []byte {
 	buf[2] = byte(epoch >> 8)
 	buf[3] = byte(epoch)
 
-	// create random
+	// add 28 random bytes
 	randbuf := make([]byte, 28)
 	rand.Read(randbuf)
 	copy(buf[4:32], randbuf)
@@ -46,6 +46,26 @@ type dtlsClientHelloMsg struct {
 	supportedPoints    []uint8
 	ticketSupported    bool
 	heartbeat          uint8
+}
+
+func (m *dtlsClientHelloMsg) createVerifyRequestAnswer(cookie []byte) *dtlsClientHelloMsg {
+    answer := new(dtlsClientHelloMsg)
+
+    answer.version = m.version
+    copy(answer.random, m.random)
+    copy(answer.sessionId, m.random)
+    copy(answer.cipherSuites, m.cipherSuites)
+    copy(answer.compressionMethods, m.compressionMethods)
+    answer.ocspStapling = m.ocspStapling
+    answer.serverName = m.serverName
+    copy(answer.supportedCurves, m.supportedCurves)
+    copy(answer.supportedPoints, m.supportedPoints)
+    answer.ticketSupported = m.ticketSupported
+    answer.heartbeat = m.heartbeat
+
+    copy(answer.cookie, cookie)
+
+    return answer
 }
 
 func (m *dtlsClientHelloMsg) equal(i interface{}) bool {

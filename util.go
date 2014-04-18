@@ -12,6 +12,7 @@ import (
 var logClientHello *log.Logger
 
 func init() {
+    // yes, this is ugly. I am to lazy to comment out my includes
 	logClientHello = log.New(os.Stdout, "[ClientHello] ", 0)
 	logClientHello = log.New(ioutil.Discard, "[ClientHello] ", 0)
 }
