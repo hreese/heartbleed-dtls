@@ -49,23 +49,23 @@ type dtlsClientHelloMsg struct {
 }
 
 func (m *dtlsClientHelloMsg) createVerifyRequestAnswer(cookie []byte) *dtlsClientHelloMsg {
-    answer := new(dtlsClientHelloMsg)
+	answer := new(dtlsClientHelloMsg)
 
-    answer.version = m.version
-    copy(answer.random, m.random)
-    copy(answer.sessionId, m.random)
-    copy(answer.cipherSuites, m.cipherSuites)
-    copy(answer.compressionMethods, m.compressionMethods)
-    answer.ocspStapling = m.ocspStapling
-    answer.serverName = m.serverName
-    copy(answer.supportedCurves, m.supportedCurves)
-    copy(answer.supportedPoints, m.supportedPoints)
-    answer.ticketSupported = m.ticketSupported
-    answer.heartbeat = m.heartbeat
+	answer.version = m.version
+	copy(answer.random, m.random)
+	copy(answer.sessionId, m.random)
+	copy(answer.cipherSuites, m.cipherSuites)
+	copy(answer.compressionMethods, m.compressionMethods)
+	answer.ocspStapling = m.ocspStapling
+	answer.serverName = m.serverName
+	copy(answer.supportedCurves, m.supportedCurves)
+	copy(answer.supportedPoints, m.supportedPoints)
+	answer.ticketSupported = m.ticketSupported
+	answer.heartbeat = m.heartbeat
 
-    copy(answer.cookie, cookie)
+	copy(answer.cookie, cookie)
 
-    return answer
+	return answer
 }
 
 func (m *dtlsClientHelloMsg) equal(i interface{}) bool {
