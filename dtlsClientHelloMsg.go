@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func dontAnnoyMeWhileDebugging() {
+func dontAnnoyMeWhileIAmDebugging() {
 	fmt.Print(hex.Dump([]byte{0x23, 0x42}))
 }
 
@@ -27,7 +27,7 @@ func NewRandom() []byte {
 	// create random
 	randbuf := make([]byte, 28)
 	rand.Read(randbuf)
-	copy(buf[3:], randbuf)
+	copy(buf[4:32], randbuf)
 
 	return buf
 }
@@ -106,22 +106,20 @@ func (m *dtlsClientHelloMsg) marshal() []byte {
 		logClientHello.Printf("%d extension(s) present, enlarging packet by %d (0x%x) bytes\n", numExtensions, 2+extensionsLength, 2+extensionsLength)
 	}
 
-	x := make([]byte, 4+length)
-	x[0] = HandshakeTypeClientHello
-	x[1] = uint8(length >> 16)
-	x[2] = uint8(length >> 8)
-	x[3] = uint8(length)
-	x[4] = uint8(m.version >> 8)
-	x[5] = uint8(m.version)
-	copy(x[6:38], m.random)
-	logClientHello.Printf("Adding session %v; length %d\n", m.sessionId, len(m.sessionId))
-	x[38] = uint8(len(m.sessionId))
-	copy(x[39:39+len(m.sessionId)], m.sessionId)
+	x := make([]byte, length)
+	x[0] = uint8(m.version >> 8)
+	x[1] = uint8(m.version)
+	fmt.Print(hex.Dump(x))
+	copy(x[2:34], m.random)
+	fmt.Print(hex.Dump(x))
+	x[34] = uint8(len(m.sessionId))
+	copy(x[35:35+len(m.sessionId)], m.sessionId)
+	logClientHello.Printf("Adding session %v; length %d: %v\n", m.sessionId, len(m.sessionId), x[39:39+len(m.sessionId)])
 
-	logClientHello.Printf("Adding cookie %v; length %d\n", m.cookie, len(m.cookie))
-	xx := x[39+len(m.cookie):]
+	xx := x[35+len(m.cookie):]
 	xx[0] = uint8(len(m.cookie))
 	copy(xx[1:1+len(m.cookie)], m.cookie)
+	logClientHello.Printf("Adding cookie %v; length %d: %v\n", m.cookie, len(m.cookie), xx[1:1+len(m.cookie)])
 
 	y := xx[1+len(m.cookie):]
 	y[0] = uint8(len(m.cipherSuites) >> 7)

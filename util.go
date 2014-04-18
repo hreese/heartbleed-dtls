@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -12,6 +13,7 @@ var logClientHello *log.Logger
 
 func init() {
 	logClientHello = log.New(os.Stdout, "[ClientHello] ", 0)
+	logClientHello = log.New(ioutil.Discard, "[ClientHello] ", 0)
 }
 
 func VisuallyCompareByteArray(a, b []byte) (hda, hdb, hddiff, places string) {

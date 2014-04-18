@@ -46,7 +46,6 @@ func TestClientHelloMsgConstruction(t *testing.T) {
 	copy(ref.random, m.random)
 
 	bref := []byte{
-		0x01, 0x00, 0x00, 0x31, // header, length
 		0xfe, 0xff, // version
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0x00,                   // sessionId
@@ -56,7 +55,7 @@ func TestClientHelloMsgConstruction(t *testing.T) {
 		0x00, 0x05, // extension length
 		0x00, 0x0f, 0x00, 0x01, 0x01,
 	}
-	copy(bref[6:], m.random)
+	copy(bref[2:], m.random)
 
 	buf := m.marshal()
 	if !bytes.Equal(buf, bref) {
