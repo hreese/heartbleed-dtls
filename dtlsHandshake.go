@@ -16,7 +16,7 @@ type dtlsHandshake struct {
 	body            []byte
 }
 
-func (m *dtlsHandshake) equal(i interface{}) bool {
+func (m *dtlsHandshake) Equal(i interface{}) bool {
 	m1, ok := i.(*dtlsHandshake)
 	if !ok {
 		return false

@@ -25,7 +25,7 @@ func TestClientHelloMsgConstruction(t *testing.T) {
 	m.ticketSupported = false
 	m.heartbeat = 1
 
-	if !m.equal(m) {
+	if !m.Equal(m) {
 		t.Errorf("dtlsClientHelloMsg not equal() to itself")
 	}
 

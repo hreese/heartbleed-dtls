@@ -68,7 +68,7 @@ func (m *dtlsClientHelloMsg) createVerifyRequestAnswer(cookie []byte) *dtlsClien
 	return answer
 }
 
-func (m *dtlsClientHelloMsg) equal(i interface{}) bool {
+func (m *dtlsClientHelloMsg) Equal(i interface{}) bool {
 	m1, ok := i.(*dtlsClientHelloMsg)
 	if !ok {
 		return false

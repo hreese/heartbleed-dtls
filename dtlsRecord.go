@@ -60,7 +60,7 @@ func (m *dtlsRecord) unmarshal(data []byte) bool {
 	return true
 }
 
-func (m *dtlsRecord) equal(i interface{}) bool {
+func (m *dtlsRecord) Equal(i interface{}) bool {
 	m1, ok := i.(*dtlsRecord)
 	if !ok {
 		return false

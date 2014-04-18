@@ -17,7 +17,7 @@ func TestHandshakeConstruction1(t *testing.T) {
 	m.body = []byte{0xaa, 0xbb, 0xcc}
 
 	// check if a handshake is equal to itself
-	if !m.equal(m) {
+	if !m.Equal(m) {
 		t.Errorf("dtlsHandshake not equal() to itself")
 	}
 
@@ -44,7 +44,7 @@ func TestHandshakeConstruction1(t *testing.T) {
 		fmt.Println(hex.Dump(buf))
 	}
 
-	if !m.equal(&u) {
+	if !m.Equal(&u) {
 		t.Errorf("m != m.Marshal().Unmarshal()")
 		fmt.Printf("%#v\n", m)
 		fmt.Printf("%#v\n", u)
@@ -92,7 +92,7 @@ func TestHandshakeConstruction2(t *testing.T) {
 		fmt.Println(hex.Dump(buf))
 	}
 
-	if !m.equal(&u) {
+	if !m.Equal(&u) {
 		t.Errorf("m != m.Marshal().Unmarshal()")
 		fmt.Printf("%+v\n", m)
 		fmt.Printf("%+v\n", u)

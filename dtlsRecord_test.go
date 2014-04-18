@@ -18,7 +18,7 @@ func TestRecordConstruction1(t *testing.T) {
 	}
 
 	// check if a record is equal to itself
-	if !r1.equal(&r1) {
+	if !r1.Equal(&r1) {
 		t.Errorf("r1 not equal to itself")
 	}
 
@@ -42,7 +42,7 @@ func TestRecordConstruction1(t *testing.T) {
 		t.Errorf("Unable to dtlsRecord.marshal() r1b")
 	}
 
-	if r1.equal(r1_um) != true {
+	if r1.Equal(r1_um) != true {
 		t.Errorf("record.marshal().unmarshal is not equal() to record")
 		fmt.Printf("r1:\n%+v\n", r1)
 		fmt.Printf("r1_um:\n%+v\n", r1_um)
