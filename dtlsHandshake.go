@@ -2,17 +2,17 @@ package heartbleed_dtls
 
 import (
 	"bytes"
-	"encoding/hex"
-	"fmt"
+	_ "encoding/hex"
+	_ "fmt"
 )
 
 type dtlsHandshake struct {
 	raw             []byte
 	handshakeType   uint8
-	length          uint32 // uint24
+	length          uint32 // uint24, length of body (all fragments) in bytes
 	messageSequence uint16
-	fragmentOffset  uint32
-	fragmentLength  uint32
+	fragmentOffset  uint32 // uint24
+	fragmentLength  uint32 // uint24, length of fragment in this fragment
 	body            []byte
 }
 
@@ -32,20 +32,20 @@ func (m *dtlsHandshake) equal(i interface{}) bool {
 }
 
 func (m *dtlsHandshake) unmarshal(data []byte) bool {
-	if len(data) < 14 {
+	if len(data) < 12 {
 		return false
 	}
 	m.raw = data
 	m.handshakeType = uint8(data[0])
 	m.length = uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
-	if uint32(len(data)) != 4+m.length {
+	m.messageSequence = uint16(data[4])<<8 | uint16(data[5])
+	m.fragmentOffset = uint32(data[6])<<16 | uint32(data[7])<<8 | uint32(data[8])
+	m.fragmentLength = uint32(data[9])<<16 | uint32(data[10])<<8 | uint32(data[11])
+	if uint32(len(data)) != 12+m.fragmentLength {
 		return false
 	}
-	m.messageSequence = uint16(data[4])<<8 | uint16(data[5])
-	m.fragmentOffset = uint32(data[6])<<24 | uint32(data[7])<<16 | uint32(data[8])<<8 | uint32(data[9])
-	m.fragmentLength = uint32(data[10])<<24 | uint32(data[11])<<16 | uint32(data[12])<<8 | uint32(data[13])
-	m.body = make([]byte, len(data[14:]))
-	copy(m.body, data[14:])
+	m.body = make([]byte, len(data[12:]))
+	copy(m.body, data[12:])
 
 	return true
 }
@@ -55,34 +55,34 @@ func (m *dtlsHandshake) marshal() []byte {
 		return m.raw
 	}
 
-	length := 10 + len(m.body)
-	m.length = uint32(length)
+	length := len(m.body)
+	if m.fragmentLength == 0 {
+		m.fragmentLength = uint32(length)
+	}
 
-	buf := make([]byte, 4+length)
+	if m.length == 0 {
+		m.length = m.fragmentLength
+	}
 
-	fmt.Printf("%#v\n", m)
-	fmt.Println(hex.Dump(buf))
+	buf := make([]byte, 12+length)
+
+	//fmt.Printf("%#v\n", m)
+	//fmt.Println(hex.Dump(buf))
 	buf[0] = m.handshakeType
-	buf[1] = uint8(length >> 16)
-	buf[2] = uint8(length >> 8)
-	buf[3] = uint8(length)
+	buf[1] = uint8(m.length >> 16)
+	buf[2] = uint8(m.length >> 8)
+	buf[3] = uint8(m.length)
 	buf[4] = uint8(m.messageSequence >> 8)
 	buf[5] = uint8(m.messageSequence)
-	buf[6] = uint8(m.fragmentOffset >> 24)
-	buf[7] = uint8(m.fragmentOffset >> 16)
-	buf[8] = uint8(m.fragmentOffset >> 8)
-	buf[9] = uint8(m.fragmentOffset)
-	if m.fragmentLength == 0 {
-		m.fragmentLength = uint32(len(m.body))
-		fmt.Printf("New length: %d\n", m.fragmentLength)
-	}
-	buf[10] = uint8(m.fragmentLength >> 24)
-	buf[11] = uint8(m.fragmentLength >> 16)
-	buf[12] = uint8(m.fragmentLength >> 8)
-	buf[13] = uint8(m.fragmentLength)
-	fmt.Printf("%#v\n", m)
-	fmt.Println(hex.Dump(buf))
-	copy(buf[14:], m.body)
+	buf[6] = uint8(m.fragmentOffset >> 16)
+	buf[7] = uint8(m.fragmentOffset >> 8)
+	buf[8] = uint8(m.fragmentOffset)
+	buf[9] = uint8(m.fragmentLength >> 16)
+	buf[10] = uint8(m.fragmentLength >> 8)
+	buf[11] = uint8(m.fragmentLength)
+	//fmt.Printf("%#v\n", m)
+	//fmt.Println(hex.Dump(buf))
+	copy(buf[12:], m.body)
 
 	m.raw = buf
 

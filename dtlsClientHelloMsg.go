@@ -2,8 +2,10 @@ package heartbleed_dtls
 
 import (
 	_ "bytes"
+	"crypto/rand"
 	_ "encoding/hex"
 	"fmt"
+	"time"
 )
 
 type dtlsClientHelloMsg struct {
@@ -20,6 +22,25 @@ type dtlsClientHelloMsg struct {
 	supportedPoints    []uint8
 	ticketSupported    bool
 	heartbeat          uint8
+}
+
+// RFC 4346, Section 7.4.1.2
+func NewRandom() []byte {
+	buf := make([]byte, 32)
+
+	// add current time
+	epoch := uint32(time.Now().Unix())
+	buf[0] = byte(epoch << 24)
+	buf[1] = byte(epoch << 16)
+	buf[2] = byte(epoch << 8)
+	buf[3] = byte(epoch)
+
+	// create random
+	randbuf := make([]byte, 28)
+	rand.Read(randbuf)
+	copy(buf[3:], randbuf)
+
+	return buf
 }
 
 func (m *dtlsClientHelloMsg) marshal() []byte {
