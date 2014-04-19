@@ -11,12 +11,19 @@ import (
 
 var logClientHello *log.Logger
 
+// crate a logger logClientHello which is used unconditionally. Switch the two
+// lines to toggle between "debug" and "silent".
+// Yes, this is ugly. I am to lazy to comment out my includes and I don't care about
+// performance at this point.
+// FIXME: make this a NOOP in production.
 func init() {
-	// yes, this is ugly. I am to lazy to comment out my includes
 	logClientHello = log.New(os.Stdout, "[ClientHello] ", 0)
 	logClientHello = log.New(ioutil.Discard, "[ClientHello] ", 0)
 }
 
+// compare two byte arrays; returns hexdumps, a hexdump showing differences
+// (X = difference, * = only present in one array) and a list showing place
+// and nature of difference.
 func VisuallyCompareByteArray(a, b []byte) (hda, hdb, hddiff, places string) {
 	var smaller, larger []byte
 	lenA := len(a)
