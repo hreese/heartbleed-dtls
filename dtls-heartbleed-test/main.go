@@ -94,7 +94,7 @@ func main() {
 	h.Init()
 	inChan := make(chan packet, 1024)
 
-	// open listening socket on all addresses, random port
+	// open listening socket on all interfaces, random port
 	inConn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv6zero, Port: 0})
 	if err != nil {
 		log.Fatal(err)
@@ -116,10 +116,13 @@ func main() {
 		}
 	}()
 
-	for {
-		select {
-		case inData := <-inChan:
-			h.Handle(inConn, &inData)
+	// run handler as goroutine
+	go func() {
+		for {
+			select {
+			case inData := <-inChan:
+				h.Handle(inConn, &inData)
+			}
 		}
-	}
+	}()
 }

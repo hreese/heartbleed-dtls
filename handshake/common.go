@@ -1,4 +1,4 @@
-package heartbleed_dtls
+package handshake
 
 const (
 	TypeChangeCypherSpec uint8 = 20
