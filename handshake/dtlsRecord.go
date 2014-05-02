@@ -4,6 +4,16 @@ import (
 	"bytes"
 )
 
+/*
+   epoch: A counter value that is incremented on every cipher state change;
+   initially zero and incremented each time a ChangeCipherSpec message is sent.
+
+   sequenceNumber: explicit sequence number; Sequence numbers are maintained
+   separately for each epoch, with each sequence_number initially being 0
+   for each epoch.
+*/
+
+
 type dtlsRecord struct {
 	raw            []byte
 	contentType    uint8
